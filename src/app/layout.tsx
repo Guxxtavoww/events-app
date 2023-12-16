@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 
+import { envSchema } from '@/config/env.config';
+
 import './globals.css';
 
 const poppins = Poppins({
@@ -19,13 +21,21 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: WithChildren) {
-  return (
-    // <ClerkProvider>
-      <html lang="pt-br">
-        <body className={poppins.variable} suppressHydrationWarning={true}>
-          {children}
-        </body>
-      </html>
-    // </ClerkProvider>
-  );
+  try {
+    envSchema.parse(process.env);
+
+    return (
+      <ClerkProvider>
+        <html lang="pt-br" className="scroll-smooth">
+          <body className={poppins.variable} suppressHydrationWarning={true}>
+            {children}
+          </body>
+        </html>
+      </ClerkProvider>
+    );
+  } catch (err) {
+    <h1>
+      <pre>{JSON.stringify(err, null, 2)}</pre>
+    </h1>;
+  }
 }
