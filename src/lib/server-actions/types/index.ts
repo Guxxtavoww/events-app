@@ -75,3 +75,10 @@ export type UpdateEventParams = {
   };
   path: string;
 };
+
+export type GetRelatedEventsByCategoryParams = {
+  category_id: string;
+  event_id: string;
+  limit?: number;
+  page: number | string;
+};

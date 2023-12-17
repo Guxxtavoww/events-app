@@ -2,11 +2,17 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
+import Search from '@/components/shared/search';
+import Collection from '@/components/shared/collection';
+import CategoryFilter from '@/components/shared/category-filter';
+import { getAllEvents } from '@/lib/server-actions/event.actions';
 
 export default async function Page({ searchParams }: SearchParamProps) {
   const page = Number(searchParams?.page) || 1;
   const searchText = searchParams?.query || '';
   const category = searchParams?.category || '';
+
+  const events = await getAllEvents(searchText, category, page);
 
   return (
     <>
@@ -39,18 +45,18 @@ export default async function Page({ searchParams }: SearchParamProps) {
       >
         <h2 className="h2-bold">Pesquise Qualquer Evento</h2>
         <div className="flex w-full flex-col gap-5 md:flex-row">
-          {/* <Search />
-          <CategoryFilter /> */}
+          <Search />
+          <CategoryFilter />
         </div>
-        {/* <Collection 
+        <Collection
           data={events?.data}
-          emptyTitle="No Events Found"
-          emptyStateSubtext="Come back later"
+          emptyTitle="Nenhum evento encontrado"
+          emptyStateSubtext="Volte mais tarde"
           collectionType="All_Events"
           limit={6}
           page={page}
           totalPages={events?.totalPages}
-        /> */}
+        />
       </section>
     </>
   );

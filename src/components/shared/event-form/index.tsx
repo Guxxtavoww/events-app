@@ -183,7 +183,7 @@ export default function EventForm({
                   <Textarea
                     placeholder="Descrição"
                     {...field}
-                    className="textarea rounded-2xl"
+                    className="textarea rounded-2xl resize-none overflow-y-auto"
                   />
                 </FormControl>
                 <FormMessage />

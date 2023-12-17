@@ -26,15 +26,13 @@ export default function RootLayout({ children }: WithChildren) {
     envSchema.parse(process.env);
 
     return (
-      <TanstackProvider>
-        <ClerkProvider>
-          <html lang="pt-br" className="scroll-smooth">
-            <body className={poppins.variable} suppressHydrationWarning={true}>
-              {children}
-            </body>
-          </html>
-        </ClerkProvider>
-      </TanstackProvider>
+      <ClerkProvider>
+        <html lang="pt-br" className="scroll-smooth">
+          <body className={poppins.variable} suppressHydrationWarning={true}>
+            <TanstackProvider>{children}</TanstackProvider>
+          </body>
+        </html>
+      </ClerkProvider>
     );
   } catch (err) {
     <h1>

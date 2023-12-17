@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery, useMutation, QueryCache } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 
 import {
   Select,
@@ -19,10 +19,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  createCategory,
-  getAllCategories,
-} from '@/lib/server-actions/category.actions';
+import { useCategories } from '@/hooks/useCategories.hook';
+import { createCategory } from '@/lib/server-actions/category.actions';
+import { removeDuplicatedItemsFromArray } from '@/utils/remove-duplicated-items-from-array.util';
 
 import { Input } from '../ui/input';
 
@@ -34,21 +33,16 @@ type DropdownProps = {
 function Dropdown({ value, onChangeHandler }: DropdownProps) {
   const [newCategory, setNewCategory] = useState<string>('');
 
+  const { categories, isLoading, setCategories } = useCategories();
+
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ['create-category'],
     mutationFn: (categoryName: string) => createCategory(categoryName),
-    onSuccess: async () => {
-      const queryCache = new QueryCache();
-
-      const getCategories = queryCache.find({ queryKey: ['get-categories'] });
-
-      await getCategories?.fetch();
+    onSuccess: (category) => {
+      setCategories((prev) =>
+        removeDuplicatedItemsFromArray([...prev, category])
+      );
     },
-  });
-
-  const { data: categories, isLoading } = useQuery({
-    queryKey: ['get-categories'],
-    queryFn: getAllCategories,
   });
 
   return (
@@ -61,17 +55,15 @@ function Dropdown({ value, onChangeHandler }: DropdownProps) {
         <SelectValue placeholder="Categoria" />
       </SelectTrigger>
       <SelectContent>
-        {categories?.length &&
-          categories?.map((category) => (
-            <SelectItem
-              key={category._id}
-              value={category._id}
-              className="select-item p-regular-14"
-            >
-              {category.name}
-            </SelectItem>
-          ))}
-
+        {categories?.map((category) => (
+          <SelectItem
+            key={category._id}
+            value={category._id}
+            className="select-item p-regular-14"
+          >
+            {category.name}
+          </SelectItem>
+        ))}
         <AlertDialog>
           <AlertDialogTrigger className="p-medium-14 flex w-full rounded-sm py-3 pl-8 text-primary-500 hover:bg-primary-50 focus:text-primary-500">
             Adicionar nova Categoria
