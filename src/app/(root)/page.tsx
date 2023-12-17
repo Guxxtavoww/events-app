@@ -3,7 +3,11 @@ import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 
-export default async function Page() {
+export default async function Page({ searchParams }: SearchParamProps) {
+  const page = Number(searchParams?.page) || 1;
+  const searchText = searchParams?.query || '';
+  const category = searchParams?.category || '';
+
   return (
     <>
       <section className="bg-primary-50 bg-dotted-pattern bg-contain py-5 md:py-10">
