@@ -40,7 +40,7 @@ function Dropdown({ value, onChangeHandler }: DropdownProps) {
     mutationFn: (categoryName: string) => createCategory(categoryName),
     onSuccess: (category) => {
       setCategories((prev) =>
-        removeDuplicatedItemsFromArray([...prev, category])
+        removeDuplicatedItemsFromArray([...prev, category], '_id')
       );
     },
   });
