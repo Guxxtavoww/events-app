@@ -44,18 +44,16 @@ export async function POST(req: Request) {
     const { id, email_addresses, image_url, first_name, last_name, username } =
       evt.data;
 
-    const user = {
-      clerk_id: id,
-      email: email_addresses[0].email_address,
-      username,
-      first_name,
-      last_name,
-      photo_url: image_url,
-    };
-
     const newUser = await import('@/lib/server-actions/user.actions').then(
       ({ createUser }) => {
-        return createUser(user);
+        return createUser({
+          clerk_id: id,
+          email: email_addresses[0].email_address,
+          username,
+          first_name,
+          last_name,
+          photo_url: image_url,
+        });
       }
     );
 
@@ -68,6 +66,29 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ message: 'OK', user: newUser });
+  }
+
+  if (eventType === 'user.updated') {
+    const {
+      id,
+      image_url: photo_url,
+      first_name,
+      last_name,
+      username,
+    } = evt.data;
+
+    const updatedUser = await import('@/lib/server-actions/user.actions').then(
+      ({ updateUser }) => {
+        return updateUser(id, {
+          first_name,
+          last_name,
+          username: username!,
+          photo_url,
+        });
+      }
+    );
+
+    return NextResponse.json({ message: 'OK', user: updatedUser });
   }
 
   if (eventType === 'user.deleted') {
