@@ -40,3 +40,38 @@ export type GetOrdersByUserParams = {
   limit?: number;
   page: string | number | null;
 };
+
+export type CreateEventParams = {
+  user_id: string;
+  event: {
+    title: string;
+    description: string;
+    location: string;
+    image_url: string;
+    start_date_time: Date;
+    end_date_time: Date;
+    category_id: string;
+    price: string;
+    is_free: boolean;
+    url: string;
+  };
+  path: string;
+};
+
+export type UpdateEventParams = {
+  user_id: string;
+  event: {
+    _id: string;
+    title: string;
+    image_url: string;
+    description: string;
+    location: string;
+    start_date_time: Date;
+    end_date_time: Date;
+    category_id: string;
+    price: string;
+    is_free: boolean;
+    url: string;
+  };
+  path: string;
+};

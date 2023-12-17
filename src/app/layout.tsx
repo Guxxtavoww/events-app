@@ -3,6 +3,7 @@ import { Poppins } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 
 import { envSchema } from '@/config/env.config';
+import { TanstackProvider } from '@/providers/tanstack-provider';
 
 import './globals.css';
 
@@ -25,13 +26,15 @@ export default function RootLayout({ children }: WithChildren) {
     envSchema.parse(process.env);
 
     return (
-      <ClerkProvider>
-        <html lang="pt-br" className="scroll-smooth">
-          <body className={poppins.variable} suppressHydrationWarning={true}>
-            {children}
-          </body>
-        </html>
-      </ClerkProvider>
+      <TanstackProvider>
+        <ClerkProvider>
+          <html lang="pt-br" className="scroll-smooth">
+            <body className={poppins.variable} suppressHydrationWarning={true}>
+              {children}
+            </body>
+          </html>
+        </ClerkProvider>
+      </TanstackProvider>
     );
   } catch (err) {
     <h1>
