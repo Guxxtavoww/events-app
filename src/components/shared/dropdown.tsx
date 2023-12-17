@@ -33,16 +33,12 @@ type DropdownProps = {
 function Dropdown({ value, onChangeHandler }: DropdownProps) {
   const [newCategory, setNewCategory] = useState<string>('');
 
-  const { categories, isLoading, setCategories } = useCategories();
+  const { categories, isLoading, handleAddCategory } = useCategories();
 
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ['create-category'],
     mutationFn: (categoryName: string) => createCategory(categoryName),
-    onSuccess: (category) => {
-      setCategories((prev) =>
-        removeDuplicatedItemsFromArray([...prev, category], '_id')
-      );
-    },
+    onSuccess: (category) => handleAddCategory(category),
   });
 
   return (
