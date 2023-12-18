@@ -1,7 +1,9 @@
-import { auth } from '@clerk/nextjs';
+import Link from 'next/link';
 
-import EventForm from '@/components/shared/event-form';
+import { Button } from '@/components/ui/button';
 import { getEventById } from '@/lib/server-actions/event.actions';
+
+import UpdateEventForm from './components/update-event-form';
 
 type UpdateEventProps = {
   params: {
@@ -12,10 +14,6 @@ type UpdateEventProps = {
 export default async function UpdateEvent({
   params: { id },
 }: UpdateEventProps) {
-  const { sessionClaims } = auth();
-
-  const userId = String(sessionClaims?.userId);
-
   const event = await getEventById(id);
 
   return (
@@ -26,12 +24,16 @@ export default async function UpdateEvent({
         </h3>
       </section>
       <div className="wrapper my-8">
-        <EventForm
-          type="Update"
-          event={event}
-          eventId={event._id}
-          userId={userId}
-        />
+        {!event ? (
+          <div className="p-2">
+            <h1>Evento inválido</h1>
+            <Button>
+              <Link href="/">Voltar</Link>
+            </Button>
+          </div>
+        ) : (
+          <UpdateEventForm event={event} />
+        )}
       </div>
     </>
   );

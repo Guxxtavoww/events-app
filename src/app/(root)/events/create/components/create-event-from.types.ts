@@ -1,14 +1,6 @@
-import { IEvent } from '@/lib/database/models/event.model';
 import { z } from 'zod';
 
-export interface iEventFormProps {
-  userId: string;
-  type: 'Create' | 'Update';
-  event?: IEvent;
-  eventId?: string;
-}
-
-export const eventFormSchema = z
+export const createEventFormSchema = z
   .object({
     title: z.string().min(3, 'Título deve ter pelo menos 3 caracteres'),
     description: z
@@ -41,4 +33,4 @@ export const eventFormSchema = z
     }
   );
 
-export type EventFormType = z.infer<typeof eventFormSchema>;
+export type EventFormType = z.infer<typeof createEventFormSchema>;

@@ -9,6 +9,8 @@ export const envSchema = z.object({
   NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string(),
   MONGODB_URI: z.string(),
   WEBHOOK_SECRET: z.string(),
+  UPLOADTHING_SECRET: z.string(),
+  UPLOADTHING_APP_ID: z.string(),
 });
 
 export type EnvType = z.infer<typeof envSchema>;

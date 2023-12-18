@@ -5,7 +5,6 @@ import { revalidatePath } from 'next/cache';
 import Event, { IEvent } from '@/lib/database/models/event.model';
 import User from '@/lib/database/models/user.model';
 import Category, { ICategory } from '@/lib/database/models/category.model';
-import { handleError } from '@/utils/error-handler.util';
 
 import { performDatabaseOperation } from '../database/database.lib';
 import {
@@ -25,7 +24,7 @@ const populateEvent = (query: any) => {
     .populate({
       path: 'organizer',
       model: User,
-      select: '_id firstName lastName',
+      select: '_id first_name last_name clerk_id',
     })
     .populate({ path: 'category', model: Category, select: '_id name' });
 };
@@ -73,15 +72,17 @@ export async function getAllEvents(
 
 export async function createEvent({ event, path, user_id }: CreateEventParams) {
   return performDatabaseOperation(async () => {
-    const organizer = await User.findById(user_id);
+    const organizer = await User.findOne({ clerk_id: user_id });
 
     if (!organizer) throw new Error('Organizer not found');
 
-    const newEvent = await Event.create({
+    const eventPayload = {
       ...event,
       category: event.category_id,
-      organizer: user_id,
-    });
+      organizer: organizer._id,
+    };
+
+    const newEvent = await Event.create(eventPayload);
 
     revalidatePath(path);
 
@@ -91,9 +92,11 @@ export async function createEvent({ event, path, user_id }: CreateEventParams) {
 
 export async function updateEvent({ event, path, user_id }: UpdateEventParams) {
   return performDatabaseOperation(async () => {
-    const eventToUpdate = await Event.findById(event._id);
+    const eventToUpdate = (await Event.findById(event._id)) as
+      | IEvent
+      | undefined;
 
-    if (!eventToUpdate || eventToUpdate.organizer.toHexString() !== user_id) {
+    if (!eventToUpdate || eventToUpdate.organizer.clerk_id !== user_id) {
       throw new Error('Unauthorized or event not found');
     }
 
@@ -113,7 +116,7 @@ export async function getEventById(eventId: string) {
   return performDatabaseOperation(async () => {
     const event = await populateEvent(Event.findById(eventId));
 
-    if (!event) throw new Error('Event not found');
+    if (!event) return undefined;
 
     return event as IEvent;
   });

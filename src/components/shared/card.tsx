@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { auth } from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 
 import { formatPrice } from '@/utils/format-price.util';
 import { IEvent } from '@/lib/database/models/event.model';
@@ -16,10 +16,9 @@ type CardProps = {
 };
 
 export default function Card({ event, hasOrderLink, hidePrice }: CardProps) {
-  const { sessionClaims } = auth();
-  const userId = String(sessionClaims?.userId);
+  const { userId } = useAuth();
 
-  const isEventCreator = userId === event.organizer._id.toString();
+  const isEventCreator = userId === event.organizer.clerk_id.toString();
 
   return (
     <div className="group relative flex min-h-[380px] w-full max-w-[400px] flex-col overflow-hidden rounded-xl bg-white shadow-md transition-all hover:shadow-lg md:min-h-[438px]">

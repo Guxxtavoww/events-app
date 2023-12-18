@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -8,6 +8,7 @@ import DatePicker from 'react-datepicker';
 import { zodResolver } from '@hookform/resolvers/zod';
 import 'react-datepicker/dist/react-datepicker.css';
 import { useMutation } from '@tanstack/react-query';
+import { useAuth } from '@clerk/nextjs';
 
 import {
   Form,
@@ -26,42 +27,25 @@ import {
   CreateEventParams,
   UpdateEventParams,
 } from '@/lib/server-actions/types';
+import { toast } from '@/components/ui/use-toast';
 import { createEvent, updateEvent } from '@/lib/server-actions/event.actions';
 
 import {
   EventFormType,
-  eventFormSchema,
-  iEventFormProps,
-} from './types/event-form.types';
-import Dropdown from '../dropdown';
-import { FileUploader } from '../file-uploader';
-import { toast } from '@/components/ui/use-toast';
+  createEventFormSchema,
+  iCreateEventFormProps,
+} from './create-event-from.types';
+import Dropdown from '@/components/shared/dropdown';
+import { FileUploader } from '@/components/shared/file-uploader';
 
-export default function EventForm({
-  type,
-  userId,
-  event,
-  eventId,
-}: iEventFormProps) {
+export function CreateEventForm() {
   const router = useRouter();
+  const { userId } = useAuth();
 
   const { startUpload } = useUploadThing('imageUploader');
 
-  const initialValues = useMemo(
-    () =>
-      event && type === 'Update'
-        ? {
-            ...event,
-            startDateTime: new Date(event.start_date_time),
-            endDateTime: new Date(event.end_date_time),
-          }
-        : eventDefaultValues,
-    [event, type]
-  );
-
   const form = useForm<EventFormType>({
-    resolver: zodResolver(eventFormSchema),
-    defaultValues: initialValues,
+    resolver: zodResolver(createEventFormSchema),
   });
 
   const [files, setFiles] = useState<File[]>([]);
@@ -70,11 +54,6 @@ export default function EventForm({
   const { mutateAsync: createEventMutation } = useMutation({
     mutationKey: ['create-event'],
     mutationFn: (data: CreateEventParams) => createEvent(data),
-  });
-
-  const { mutateAsync: updateEventMutation } = useMutation({
-    mutationKey: ['update-event'],
-    mutationFn: (data: UpdateEventParams) => updateEvent(data),
   });
 
   const onSubmit = useCallback(
@@ -90,39 +69,19 @@ export default function EventForm({
           uploadedImageUrl = uploadedImages[0].url;
         }
 
-        if (type === 'Create') {
-          const newEvent = await createEventMutation({
-            event: { ...data, image_url: uploadedImageUrl },
-            user_id: userId,
-            path: '/profile',
-          });
-
-          if (newEvent) {
-            form.reset();
-            router.push(`/events/${newEvent._id}`);
-            setFiles([]);
-          }
-
-          return;
-        }
-
-        if (!eventId) {
-          router.back();
-
-          return;
-        }
-
-        const updatedEvent = await updateEventMutation({
-          user_id: userId,
-          event: { ...data, image_url: uploadedImageUrl, _id: eventId },
-          path: `/events/${eventId}`,
+        const newEvent = await createEventMutation({
+          event: { ...data, image_url: uploadedImageUrl },
+          user_id: userId!,
+          path: '/profile',
         });
 
-        if (updatedEvent) {
+        if (newEvent) {
           form.reset();
-          router.push(`/events/${updatedEvent._id}`);
+          router.push(`/events/${newEvent._id}`);
           setFiles([]);
         }
+
+        return;
       } catch (error: any) {
         toast({
           title: 'Erro!',
@@ -137,17 +96,7 @@ export default function EventForm({
         });
       }
     },
-    [
-      files,
-      startUpload,
-      type,
-      createEventMutation,
-      userId,
-      router,
-      form,
-      eventId,
-      updateEventMutation,
-    ]
+    [files, startUpload, createEventMutation, userId, router, form]
   );
 
   return (
@@ -403,11 +352,7 @@ export default function EventForm({
           disabled={form.formState.isSubmitting}
           className="button col-span-2 w-full"
         >
-          {form.formState.isSubmitting
-            ? '...'
-            : type === 'Create'
-            ? 'Criar Evento'
-            : 'Editar Evento'}
+          {form.formState.isSubmitting ? '...' : 'Criar Evento'}
         </Button>
       </form>
     </Form>

@@ -24,9 +24,9 @@ export async function getUserById(userId: string) {
   });
 }
 
-export async function updateUser(clerkId: string, user: UpdateUserParams) {
+export async function updateUser(clerk_id: string, user: UpdateUserParams) {
   return performDatabaseOperation(async () => {
-    const updatedUser = await User.findOneAndUpdate({ clerkId }, user, {
+    const updatedUser = await User.findOneAndUpdate({ clerk_id }, user, {
       new: true,
     });
 
@@ -36,9 +36,9 @@ export async function updateUser(clerkId: string, user: UpdateUserParams) {
   });
 }
 
-export async function deleteUser(clerkId: string) {
+export async function deleteUser(clerk_id: string) {
   return performDatabaseOperation(async () => {
-    const userToDelete = await User.findOne({ clerkId });
+    const userToDelete = await User.findOne({ clerk_id });
 
     if (!userToDelete) {
       throw new Error('User not found');
