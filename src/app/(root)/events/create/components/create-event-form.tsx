@@ -22,18 +22,13 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { useUploadThing } from '@/lib/uploadthing.lib';
-import { eventDefaultValues } from '@/constants';
-import {
-  CreateEventParams,
-  UpdateEventParams,
-} from '@/lib/server-actions/types';
+import { CreateEventParams } from '@/lib/server-actions/types';
 import { toast } from '@/components/ui/use-toast';
-import { createEvent, updateEvent } from '@/lib/server-actions/event.actions';
+import { createEvent } from '@/lib/server-actions/event.actions';
 
 import {
   EventFormType,
   createEventFormSchema,
-  iCreateEventFormProps,
 } from './create-event-from.types';
 import Dropdown from '@/components/shared/dropdown';
 import { FileUploader } from '@/components/shared/file-uploader';
@@ -87,11 +82,14 @@ export function CreateEventForm() {
           title: 'Erro!',
           variant: 'destructive',
           description: (
-            <pre className="mt-2 w-[340px] max-w-full rounded-md bg-slate-950 p-4">
-              <code className="text-white max-w-full">
-                {error.message || JSON.stringify(error, null, 2)}
-              </code>
-            </pre>
+            <div>
+              <span>Error ao tentar atualizar evento</span>
+              <pre className="mt-2 w-[340px] max-w-full rounded-md bg-slate-950 p-4">
+                <code className="text-white max-w-full">
+                  {error.message || JSON.stringify(error, null, 2)}
+                </code>
+              </pre>
+            </div>
           ),
         });
       }

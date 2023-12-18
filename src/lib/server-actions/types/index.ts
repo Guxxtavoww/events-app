@@ -1,4 +1,4 @@
-import { EventFormType } from '@/components/shared/event-form/types/event-form.types';
+import { EventFormType } from '@/app/(root)/events/create/components/create-event-from.types';
 
 export interface iCreateUserPayload {
   clerk_id: string;

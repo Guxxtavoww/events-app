@@ -32,7 +32,7 @@ export default async function UpdateEvent({
             </Button>
           </div>
         ) : (
-          <UpdateEventForm title={event.title} />
+          <UpdateEventForm event={event} />
         )}
       </div>
     </>

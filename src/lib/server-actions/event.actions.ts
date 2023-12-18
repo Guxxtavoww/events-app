@@ -96,8 +96,14 @@ export async function updateEvent({ event, path, user_id }: UpdateEventParams) {
       | IEvent
       | undefined;
 
-    if (!eventToUpdate || eventToUpdate.organizer.clerk_id !== user_id) {
+    if (!eventToUpdate) {
       throw new Error('Unauthorized or event not found');
+    }
+
+    const eventOrganizer = await User.findById(eventToUpdate.organizer._id);
+
+    if (!eventOrganizer || eventOrganizer.clerk_id !== user_id) {
+      throw new Error('Invalid organizer');
     }
 
     const updatedEvent = await Event.findByIdAndUpdate(
@@ -114,11 +120,13 @@ export async function updateEvent({ event, path, user_id }: UpdateEventParams) {
 
 export async function getEventById(eventId: string) {
   return performDatabaseOperation(async () => {
-    const event = await populateEvent(Event.findById(eventId));
+    const event = (await populateEvent(Event.findById(eventId))) as
+      | IEvent
+      | undefined;
 
     if (!event) return undefined;
 
-    return event as IEvent;
+    return JSON.parse(JSON.stringify(event)) as IEvent;
   });
 }
 

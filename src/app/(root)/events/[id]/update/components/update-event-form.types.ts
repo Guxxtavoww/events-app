@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Document } from 'mongoose';
 
 import { IEvent } from '@/lib/database/models/event.model';
 
