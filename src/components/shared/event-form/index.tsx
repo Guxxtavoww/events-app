@@ -123,7 +123,7 @@ export default function EventForm({
           router.push(`/events/${updatedEvent._id}`);
           setFiles([]);
         }
-      } catch (error) {
+      } catch (error: any) {
         toast({
           title: 'Erro!',
           variant: 'destructive',
