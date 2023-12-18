@@ -13,6 +13,10 @@ export async function getAllCategories() {
 
 export async function createCategory(categoryName: string) {
   return performDatabaseOperation(async () => {
+    const existingCategory = await Category.findOne({ name: categoryName });
+
+    if (existingCategory) return undefined;
+
     const newCategory = await Category.create({ name: categoryName });
 
     return JSON.parse(JSON.stringify(newCategory)) as ICategory;

@@ -7,27 +7,25 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '../ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from '../ui/alert-dialog';
 import { useCategories } from '@/hooks/useCategories.hook';
 import { createCategory } from '@/lib/server-actions/category.actions';
-import { removeDuplicatedItemsFromArray } from '@/utils/remove-duplicated-items-from-array.util';
 
 import { Input } from '../ui/input';
 
 type DropdownProps = {
   value?: string;
-  onChangeHandler?: () => void;
+  onChangeHandler?: (value: string) => void;
 };
 
 function Dropdown({ value, onChangeHandler }: DropdownProps) {
@@ -66,15 +64,14 @@ function Dropdown({ value, onChangeHandler }: DropdownProps) {
           </AlertDialogTrigger>
           <AlertDialogContent className="bg-white">
             <AlertDialogHeader>
-              <AlertDialogTitle>New Category</AlertDialogTitle>
-              <AlertDialogDescription>
-                <Input
-                  type="text"
-                  placeholder="Nome da categoria"
-                  className="input-field mt-3"
-                  onChange={(e) => setNewCategory(e.target.value)}
-                />
-              </AlertDialogDescription>
+              <AlertDialogTitle>Nova Categoria</AlertDialogTitle>
+              <Input
+                type="text"
+                placeholder="Nome da categoria"
+                className="input-field mt-3"
+                onChange={(e) => setNewCategory(e.target.value)}
+                disabled={isPending}
+              />
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>

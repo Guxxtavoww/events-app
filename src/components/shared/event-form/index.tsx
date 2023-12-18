@@ -35,6 +35,7 @@ import {
 } from './types/event-form.types';
 import Dropdown from '../dropdown';
 import { FileUploader } from '../file-uploader';
+import { toast } from '@/components/ui/use-toast';
 
 export default function EventForm({
   type,
@@ -45,8 +46,6 @@ export default function EventForm({
   const router = useRouter();
 
   const { startUpload } = useUploadThing('imageUploader');
-
-  const [files, setFiles] = useState<File[]>([]);
 
   const initialValues = useMemo(
     () =>
@@ -65,6 +64,9 @@ export default function EventForm({
     defaultValues: initialValues,
   });
 
+  const [files, setFiles] = useState<File[]>([]);
+  const [isFree, setIsFree] = useState(form.getValues('is_free') === true);
+
   const { mutateAsync: createEventMutation } = useMutation({
     mutationKey: ['create-event'],
     mutationFn: (data: CreateEventParams) => createEvent(data),
@@ -77,48 +79,62 @@ export default function EventForm({
 
   const onSubmit = useCallback(
     async (data: EventFormType) => {
-      let uploadedImageUrl = data.image_url;
+      try {
+        let uploadedImageUrl = data.image_url;
 
-      if (files.length > 0) {
-        const uploadedImages = await startUpload(files);
+        if (files.length > 0) {
+          const uploadedImages = await startUpload(files);
 
-        if (!uploadedImages) return;
+          if (!uploadedImages) return;
 
-        uploadedImageUrl = uploadedImages[0].url;
-      }
-
-      if (type === 'Create') {
-        const newEvent = await createEventMutation({
-          event: { ...data, image_url: uploadedImageUrl },
-          user_id: userId,
-          path: '/profile',
-        });
-
-        if (newEvent) {
-          form.reset();
-          router.push(`/events/${newEvent._id}`);
-          setFiles([]);
+          uploadedImageUrl = uploadedImages[0].url;
         }
 
-        return;
-      }
+        if (type === 'Create') {
+          const newEvent = await createEventMutation({
+            event: { ...data, image_url: uploadedImageUrl },
+            user_id: userId,
+            path: '/profile',
+          });
 
-      if (!eventId) {
-        router.back();
+          if (newEvent) {
+            form.reset();
+            router.push(`/events/${newEvent._id}`);
+            setFiles([]);
+          }
 
-        return;
-      }
+          return;
+        }
 
-      const updatedEvent = await updateEventMutation({
-        user_id: userId,
-        event: { ...data, image_url: uploadedImageUrl, _id: eventId },
-        path: `/events/${eventId}`,
-      });
+        if (!eventId) {
+          router.back();
 
-      if (updatedEvent) {
-        form.reset();
-        router.push(`/events/${updatedEvent._id}`);
-        setFiles([]);
+          return;
+        }
+
+        const updatedEvent = await updateEventMutation({
+          user_id: userId,
+          event: { ...data, image_url: uploadedImageUrl, _id: eventId },
+          path: `/events/${eventId}`,
+        });
+
+        if (updatedEvent) {
+          form.reset();
+          router.push(`/events/${updatedEvent._id}`);
+          setFiles([]);
+        }
+      } catch (error) {
+        toast({
+          title: 'Erro!',
+          variant: 'destructive',
+          description: (
+            <pre className="mt-2 w-[340px] max-w-full rounded-md bg-slate-950 p-4">
+              <code className="text-white max-w-full">
+                {error.message || JSON.stringify(error, null, 2)}
+              </code>
+            </pre>
+          ),
+        });
       }
     },
     [
@@ -256,7 +272,7 @@ export default function EventForm({
                       onChange={(date: Date) => field.onChange(date)}
                       showTimeSelect
                       timeInputLabel="Horário:"
-                      dateFormat="MM/dd/yyyy h:mm aa"
+                      dateFormat="dd/MM/yyyy h:mm aa"
                       wrapperClassName="datePicker"
                     />
                   </div>
@@ -287,7 +303,7 @@ export default function EventForm({
                       onChange={(date: Date) => field.onChange(date)}
                       showTimeSelect
                       timeInputLabel="Horário:"
-                      dateFormat="MM/dd/yyyy h:mm aa"
+                      dateFormat="dd/MM/yyyy h:mm aa"
                       wrapperClassName="datePicker"
                     />
                   </div>
@@ -315,8 +331,9 @@ export default function EventForm({
                     <Input
                       type="number"
                       placeholder="Preço"
-                      {...field}
                       className="p-regular-16 border-0 bg-grey-50 outline-offset-0 focus:border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      {...field}
+                      disabled={isFree === true}
                     />
                     <FormField
                       control={form.control}
@@ -327,12 +344,18 @@ export default function EventForm({
                             <div className="flex items-center">
                               <label
                                 htmlFor="is_free"
-                                className="whitespace-nowrap pr-3 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                className="whitespace-nowrap pr-3 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none"
                               >
                                 Bilhete grátis ?
                               </label>
                               <Checkbox
-                                onCheckedChange={field.onChange}
+                                onCheckedChange={(checkedState) => {
+                                  field.onChange(checkedState);
+                                  setIsFree(checkedState === true);
+                                  if (checkedState === true) {
+                                    form.setValue('price', '');
+                                  }
+                                }}
                                 checked={field.value}
                                 id="is_free"
                                 className="mr-2 h-5 w-5 border-2 border-primary-500"

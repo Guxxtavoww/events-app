@@ -1,3 +1,5 @@
+import { EventFormType } from '@/components/shared/event-form/types/event-form.types';
+
 export interface iCreateUserPayload {
   clerk_id: string;
   email: string;
@@ -43,36 +45,13 @@ export type GetOrdersByUserParams = {
 
 export type CreateEventParams = {
   user_id: string;
-  event: {
-    title: string;
-    description: string;
-    location: string;
-    image_url: string;
-    start_date_time: Date;
-    end_date_time: Date;
-    category_id: string;
-    price: string;
-    is_free: boolean;
-    url: string;
-  };
+  event: EventFormType;
   path: string;
 };
 
 export type UpdateEventParams = {
   user_id: string;
-  event: {
-    _id: string;
-    title: string;
-    image_url: string;
-    description: string;
-    location: string;
-    start_date_time: Date;
-    end_date_time: Date;
-    category_id: string;
-    price: string;
-    is_free: boolean;
-    url: string;
-  };
+  event: Partial<EventFormType> & { _id: string };
   path: string;
 };
 
