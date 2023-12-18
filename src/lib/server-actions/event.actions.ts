@@ -9,6 +9,7 @@ import Category, { ICategory } from '@/lib/database/models/category.model';
 import { performDatabaseOperation } from '../database/database.lib';
 import {
   CreateEventParams,
+  GetEventsByUserParams,
   GetRelatedEventsByCategoryParams,
   UpdateEventParams,
 } from './types';
@@ -127,6 +128,31 @@ export async function getEventById(eventId: string) {
     if (!event) return undefined;
 
     return JSON.parse(JSON.stringify(event)) as IEvent;
+  });
+}
+
+export async function getEventsByUser({
+  page,
+  userId,
+  limit = 6,
+}: GetEventsByUserParams) {
+  return performDatabaseOperation(async () => {
+    const skipAmount = (page - 1) * limit;
+
+    const eventsQuery = Event.find()
+      .sort({ created_at: 'desc' })
+      .skip(skipAmount)
+      .limit(limit);
+
+    const [events, eventsCount] = await Promise.all([
+      populateEvent(eventsQuery),
+      Event.countDocuments(),
+    ]);
+
+    return {
+      data: JSON.parse(JSON.stringify(events)) as IEvent[],
+      totalPages: Math.ceil(eventsCount / limit),
+    };
   });
 }
 

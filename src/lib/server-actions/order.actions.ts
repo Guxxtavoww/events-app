@@ -9,7 +9,7 @@ import {
   GetOrdersByEventParams,
   GetOrdersByUserParams,
 } from './types';
-import Order from '../database/models/order.model';
+import Order, { IOrder } from '../database/models/order.model';
 import Event from '../database/models/event.model';
 import User from '../database/models/user.model';
 import { performDatabaseOperation } from '../database/database.lib';
@@ -69,5 +69,40 @@ export async function getOrderByEvent({
     ]);
 
     return orders;
+  });
+}
+
+export async function getOrdersByUser({
+  user_id,
+  limit = 3,
+  page,
+}: GetOrdersByUserParams) {
+  return performDatabaseOperation(async () => {
+    const skipAmount = (Number(page) - 1) * limit;
+
+    const [orders, ordersCount] = await Promise.all([
+      Order.distinct('event._id')
+        .find()
+        .sort({ created_at: 'desc' })
+        .skip(skipAmount)
+        .limit(limit)
+        .populate({
+          path: 'event',
+          model: Event,
+          populate: {
+            path: 'organizer',
+            model: User,
+            select: '_id first_name last_name',
+          },
+        }),
+      Order.distinct('event._id').countDocuments(),
+    ]);
+
+    return {
+      data: JSON.parse(
+        JSON.stringify(orders.map((order) => order.event) || [])
+      ),
+      totalPages: Math.ceil(ordersCount / limit),
+    };
   });
 }
