@@ -1,40 +1,44 @@
-import mongoose from 'mongoose';
+import { PrismaClient } from '@prisma/client';
 
 import { handleError } from '@/utils/error-handler.util';
 
-const mongodb_uri = process.env.MONGODB_URI;
+class PrimsaInstance {
+  private prismaInstance: Maybe<PrismaClient> = null;
 
-let cashed: typeof mongoose & { conn?: Maybe<unknown>; promise?: Maybe<any> } =
-  mongoose || {
-    conn: null,
-    promise: null,
-  };
+  constructor() {
+    this.prismaInstance = new PrismaClient();
+  }
 
-export async function connectToDatabase() {
-  if (cashed.conn) return cashed.conn;
+  async getPrismaInstance() {
+    if (this.prismaInstance) {
+      await this.prismaInstance.$connect();
 
-  cashed.promise =
-    cashed.promise ||
-    mongoose.connect(mongodb_uri, {
-      dbName: 'event-app',
-      bufferCommands: false,
-    });
+      return this.prismaInstance;
+    }
 
-  cashed.conn = await cashed.promise;
+    throw new Error('Prisma instance not initialized.');
+  }
 
-  return cashed.conn;
+  async disconnect() {
+    if (this.prismaInstance) {
+      await this.prismaInstance.$disconnect();
+    }
+  }
 }
 
-export async function performDatabaseOperation<T>(
-  callback: (...args: any) => Promise<T>
-) {
-  try {
-    await connectToDatabase();
+const prismaInstance = new PrimsaInstance();
 
-    const result = await callback();
+export async function performDatabaseOperation<T>(
+  callback: (prisma: PrismaClient) => Promise<T>
+): Promise<T> {
+  try {
+    const prisma = await prismaInstance.getPrismaInstance();
+
+    const result = await callback(prisma);
 
     return Promise.resolve(result);
   } catch (error) {
+    prismaInstance.disconnect();
     throw handleError(error);
   }
 }

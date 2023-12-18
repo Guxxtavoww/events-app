@@ -2,9 +2,6 @@
 
 import { revalidatePath } from 'next/cache';
 
-import Event, { IEvent } from '@/lib/database/models/event.model';
-import User from '@/lib/database/models/user.model';
-import Category, { ICategory } from '@/lib/database/models/category.model';
 
 import { performDatabaseOperation } from '../database/database.lib';
 import {
@@ -13,22 +10,6 @@ import {
   GetRelatedEventsByCategoryParams,
   UpdateEventParams,
 } from './types';
-
-const getCategoryByName = async (name: string) => {
-  return Category.findOne({
-    name: { $regex: name, $options: 'i' },
-  }) as unknown as Maybe<ICategory>;
-};
-
-const populateEvent = (query: any) => {
-  return query
-    .populate({
-      path: 'organizer',
-      model: User,
-      select: '_id first_name last_name clerk_id',
-    })
-    .populate({ path: 'category', model: Category, select: '_id name' });
-};
 
 export async function getAllEvents(
   query: string,
