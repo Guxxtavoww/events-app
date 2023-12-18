@@ -8,11 +8,11 @@ import { formUrlQuery, removeKeysFromQuery } from '@/utils/url.utils';
 
 import { Input } from '../ui/input';
 
-const Search = ({
+export default function Search({
   placeholder = 'Pesquise por títulos...',
 }: {
   placeholder?: string;
-}) => {
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -57,6 +57,4 @@ const Search = ({
       />
     </div>
   );
-};
-
-export default Search;
+}
