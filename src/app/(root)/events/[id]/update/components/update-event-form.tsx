@@ -1,11 +1,11 @@
 'use client';
 
-import { iUpdateEventFormProps } from './update-event-from.types';
+import { iUpdateEventFormProps } from './update-event-form.types';
 
-export default function UpdateEventForm({ event }: iUpdateEventFormProps) {
+export default function UpdateEventForm({ title }: { title: string }) {
   return (
     <>
-      <pre>{JSON.stringify(event, null, 2)}</pre>
+      <h1>{title}</h1>
     </>
   );
 }

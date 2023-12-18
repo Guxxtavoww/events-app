@@ -8,6 +8,8 @@ import { formatPrice } from '@/utils/format-price.util';
 import { formatDateTime } from '@/utils/format-date-time.util';
 
 import Collection from '@/components/shared/collection';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 // import CheckoutButton from '@/components/shared/CheckoutButton';
 
 export default async function EventDetails({
@@ -15,6 +17,17 @@ export default async function EventDetails({
   searchParams,
 }: SearchParamProps) {
   const event = await getEventById(id);
+
+  if (!event) {
+    return (
+      <div>
+        <h1>Evento inválido</h1>
+        <Button>
+          <Link href="/">Voltar</Link>
+        </Button>
+      </div>
+    );
+  }
 
   const relatedEvents = await getRelatedEventsByCategory({
     category_id: event.category._id,
