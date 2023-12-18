@@ -85,7 +85,7 @@ export default function EventForm({
         if (files.length > 0) {
           const uploadedImages = await startUpload(files);
 
-          if (!uploadedImages) return;
+          if (!uploadedImages) throw new Error('Falha ao enviar a foto');
 
           uploadedImageUrl = uploadedImages[0].url;
         }
