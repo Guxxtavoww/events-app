@@ -18,6 +18,14 @@ export const envSchema = z.object({
   UPLOADTHING_SECRET: z.string(),
   UPLOADTHING_APP_ID: z.string(),
   DATABASE_OUTPUT: z.string().optional(),
+  STRIPE_PUBLIC_KEY: z.string(),
+  STRIPE_SECRET_KEY: z.string(),
+  NEXT_PUBLIC_SERVER_URL: z
+    .string()
+    .url()
+    .optional()
+    .default('https://eventos-by-gustavo.vercel.app/'),
+  STRIPE_WEBHOOK_SECRET: z.string(),
 });
 
 export type EnvType = z.infer<typeof envSchema>;

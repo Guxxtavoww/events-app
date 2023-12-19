@@ -9,6 +9,7 @@ import { formatPrice } from '@/utils/format-price.util';
 import { formatDateTime } from '@/utils/format-date-time.util';
 import Collection from '@/components/shared/collection';
 import { Button } from '@/components/ui/button';
+import CheckoutButton from '@/components/shared/checkout-button';
 
 export default async function EventDetails({
   params: { id },
@@ -67,7 +68,7 @@ export default async function EventDetails({
                 </p>
               </div>
             </div>
-            {/* <CheckoutButton event={event} /> */}
+            <CheckoutButton event={event} />
             <div className="flex flex-col gap-5">
               <div className="flex gap-2 md:gap-3">
                 <Image

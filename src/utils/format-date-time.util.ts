@@ -1,4 +1,11 @@
-export const formatDateTime = (dateString: Date) => {
+export const formatDateTime = (dateString: Date | null) => {
+  if (!dateString)
+    return {
+      dateTime: 'Não Informado',
+      dateOnly: 'Não Informado',
+      timeOnly: 'Não Informado',
+    };
+
   const dateTimeOptions: Intl.DateTimeFormatOptions = {
     weekday: 'short',
     month: 'short',

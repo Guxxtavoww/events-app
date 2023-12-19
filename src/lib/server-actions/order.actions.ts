@@ -8,6 +8,7 @@ import {
   GetOrdersByUserParams,
 } from './types';
 import { performDatabaseOperation } from '../database/database.lib';
+import Stripe from 'stripe';
 
 export async function getOrderByEvent({
   event_id,
@@ -28,6 +29,22 @@ export async function getOrderByEvent({
               last_name: search_string,
             },
           ],
+        },
+      },
+      select: {
+        buyer: {
+          select: {
+            first_name: true,
+            last_name: true,
+          },
+        },
+        created_at: true,
+        event: {
+          select: {
+            event_id: true,
+            title: true,
+            price: true,
+          },
         },
       },
     });
@@ -101,5 +118,65 @@ export async function getOrdersByUser({
       data: orders.map((order) => order.event),
       totalPages: Math.ceil(ordersCount / limit),
     };
+  });
+}
+
+export async function checkoutOrder({
+  buyer_id,
+  event_id,
+  event_title,
+  is_free,
+  price,
+}: CheckoutOrderParams) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  const order_price = is_free ? 0 : Number(price) * 100;
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      line_items: [
+        {
+          price_data: {
+            currency: 'brl',
+            unit_amount: order_price,
+            product_data: {
+              name: event_title,
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        event_id,
+        buyer_id,
+      },
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_SERVER_URL}profile`,
+      cancel_url: process.env.NEXT_PUBLIC_SERVER_URL,
+    });
+
+    redirect(session.url || '/');
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function createOrder({
+  buyer_id,
+  created_at,
+  event_id,
+  stripe_id,
+  total_amount,
+}: CreateOrderParams) {
+  return performDatabaseOperation(async (prisma) => {
+    return prisma.orders.create({
+      data: {
+        stripe_id,
+        buyer_id,
+        created_at,
+        event_id,
+        total_amount,
+      },
+    });
   });
 }
