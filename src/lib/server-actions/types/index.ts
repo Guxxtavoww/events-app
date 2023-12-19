@@ -57,9 +57,9 @@ export type UpdateEventParams = {
 
 export type GetRelatedEventsByCategoryParams = {
   category_id: number;
-  event_id: string;
   limit?: number;
   page: number | string;
+  event_id: string
 };
 
 export type GetEventsByUserParams = {

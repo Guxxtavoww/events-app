@@ -32,10 +32,14 @@ export async function getAllEvents(
           },
         },
         {
-          title: query,
+          title: {
+            contains: query,
+          },
         },
         {
-          description: query,
+          description: {
+            contains: query,
+          },
         },
       ],
     };
@@ -140,7 +144,7 @@ export async function updateEvent({ event, path, user_id }: UpdateEventParams) {
 
     const eventOrganizer = eventToUpdate.organizer;
 
-    if (!eventOrganizer || eventOrganizer.user_id !== user_id) {
+    if (eventOrganizer.user_id !== user_id) {
       throw new Error('Invalid organizer');
     }
 
@@ -265,28 +269,31 @@ export async function getEventsByUser({
 
 export async function getRelatedEventsByCategory({
   category_id,
-  event_id,
   page = 1,
   limit = 3,
+  event_id,
 }: GetRelatedEventsByCategoryParams) {
   return performDatabaseOperation(async (primsa) => {
     const skipAmount = (Number(page) - 1) * limit;
 
     const where = {
       category_id,
-      event_id: {
-        contains: event_id,
+      NOT: {
+        event_id,
       },
     };
 
     const [events, eventsCount] = await Promise.all([
       primsa.events.findMany({
-        where,
+        where: {
+          category_id,
+          NOT: {
+            event_id,
+          },
+        },
         orderBy: {
           created_at: 'desc',
         },
-        skip: skipAmount,
-        take: limit,
         select: {
           event_id: true,
           organizer: {
@@ -313,6 +320,8 @@ export async function getRelatedEventsByCategory({
           start_date_time: true,
           url: true,
         },
+        skip: skipAmount,
+        take: limit,
       }),
       primsa.events.count({ where }),
     ]);

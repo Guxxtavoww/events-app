@@ -29,8 +29,8 @@ export default async function EventDetails({
 
   const relatedEvents = await getRelatedEventsByCategory({
     category_id: event.category.category_id,
-    event_id: event.event_id,
-    page: String(searchParams.page),
+    page: searchParams.page ? +searchParams.page : 1,
+    event_id: id,
   });
 
   const formatedStartDate = formatDateTime(event.start_date_time);

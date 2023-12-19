@@ -15,7 +15,7 @@ export const createEventFormSchema = z
     start_date_time: z.date({ required_error: 'Obrigatório' }),
     end_date_time: z.date({ required_error: 'Obrigatório' }),
     category_id: z
-      .number({ required_error: 'Categoria é obrigatória' })
+      .string({ required_error: 'Categoria é obrigatória' })
       .transform((value) => +value),
     price: z.string().optional(),
     is_free: z.boolean().optional().default(false),
