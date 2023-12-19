@@ -50,7 +50,7 @@ export default function Checkout({
         total_amount: '1',
       });
 
-      replace(`/orders?eventId=${created_order.event_id}`);
+      return replace(`/orders?eventId=${created_order.event_id}`);
     }
 
     const order: CheckoutOrderParams = {
