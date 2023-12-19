@@ -47,7 +47,7 @@ model categories {
 
 model orders {
   order_id     Int       @id @default(autoincrement())
-  stripe_id    String    @unique
+  stripe_id    String?    @unique
   total_amount String?
   event_id     String
   event        events    @relation(fields: [event_id], references: [event_id])

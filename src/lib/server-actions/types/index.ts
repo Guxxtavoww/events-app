@@ -16,24 +16,16 @@ export type UpdateUserParams = {
   photo_url: string;
 };
 
-export type CheckoutOrderParams =
-  | {
-      is_free: true;
-      event_title: string;
-      event_id: string;
-      price?: Maybe<string>;
-      buyer_id: string;
-    }
-  | {
-      is_free?: false;
-      event_title: string;
-      event_id: string;
-      price: string;
-      buyer_id: string;
-    };
+export type CheckoutOrderParams = {
+  is_free?: false;
+  event_title: string;
+  event_id: string;
+  price: string;
+  buyer_id: string;
+};
 
 export type CreateOrderParams = {
-  stripe_id: string;
+  stripe_id?: string;
   event_id: string;
   buyer_id: string;
   total_amount: string;

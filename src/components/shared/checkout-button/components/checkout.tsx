@@ -8,8 +8,12 @@ import { iCheckoutButtonProps } from '..';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { useMutation } from '@tanstack/react-query';
-import { checkoutOrder } from '@/lib/server-actions/order.actions';
-import { CheckoutOrderParams } from '@/lib/server-actions/types';
+import {
+  CheckoutOrderParams,
+  CreateOrderParams,
+} from '@/lib/server-actions/types';
+import { checkoutOrder, createOrder } from '@/lib/server-actions/order.actions';
+import { useRouter } from 'next/navigation';
 
 interface iCheckoutProps {
   event: iCheckoutButtonProps['event'];
@@ -19,31 +23,41 @@ interface iCheckoutProps {
 loadStripe(process.env.STRIPE_PUBLIC_KEY);
 
 export default function Checkout({ event, user_id }: iCheckoutProps) {
+  const { replace } = useRouter();
+
   const { mutateAsync, isPending } = useMutation({
     mutationKey: ['checkout-order', event.event_id],
     mutationFn: (data: CheckoutOrderParams) => checkoutOrder(data),
   });
 
+  const { mutateAsync: createOrderMutation, isPending: isLoading } =
+    useMutation({
+      mutationKey: ['create-order'],
+      mutationFn: (data: CreateOrderParams) => createOrder(data),
+    });
+
   const onCheckout = useCallback(async () => {
-    const order: CheckoutOrderParams =
-      event.is_free === true
-        ? {
-            buyer_id: user_id,
-            event_id: event.event_id,
-            event_title: event.title,
-            is_free: true,
-            price: null,
-          }
-        : {
-            buyer_id: user_id,
-            event_id: event.event_id,
-            event_title: event.title,
-            is_free: false,
-            price: event.price!,
-          };
+    if (event.is_free) {
+      const created_order = await createOrderMutation({
+        buyer_id: user_id,
+        created_at: new Date(),
+        event_id: event.event_id,
+        total_amount: '1',
+      });
+
+      replace(`/orders?eventId=${created_order.event_id}`);
+    }
+
+    const order: CheckoutOrderParams = {
+      buyer_id: user_id,
+      event_id: event.event_id,
+      event_title: event.title,
+      is_free: false,
+      price: event.price!,
+    };
 
     return await mutateAsync(order);
-  }, [event, user_id, mutateAsync]);
+  }, [event, user_id, mutateAsync, replace, createOrderMutation]);
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -69,7 +83,7 @@ export default function Checkout({ event, user_id }: iCheckoutProps) {
         role="link"
         size="lg"
         className="button sm:w-fit"
-        disabled={isPending}
+        disabled={isPending || isLoading}
       >
         {event.is_free ? 'Adquirir Bilhete' : 'Comprar Bilhete'}
       </Button>
