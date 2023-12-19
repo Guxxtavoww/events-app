@@ -98,7 +98,7 @@ export async function getOrdersByUser({
     ]);
 
     return {
-      data: orders?.map((order) => order.event),
+      data: orders.map((order) => order.event),
       totalPages: Math.ceil(ordersCount / limit),
     };
   });
