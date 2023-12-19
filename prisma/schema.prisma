@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = env("DATABASE_OUTPUT")
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  user_id          String   @id
+  email            String
+  username         String
+  first_name       String
+  last_name        String
+  photo_url        String
+  organized_events events[]
+  ordered_events   orders[]
+}
+
+model events {
+  event_id        String     @id @default(uuid())
+  title           String
+  description     String
+  location        String
+  created_at      DateTime?  @default(now())
+  image_url       String
+  start_date_time DateTime
+  end_date_time   DateTime
+  price           String?
+  is_free         Boolean
+  url             String
+  category        categories @relation(fields: [category_id], references: [category_id])
+  category_id     Int
+  organizer       users      @relation(fields: [organizer_id], references: [user_id])
+  organizer_id    String
+  orders          orders[]
+}
+
+model categories {
+  category_id    Int      @id @default(autoincrement())
+  category_name  String
+  related_events events[]
+}
+
+model orders {
+  order_id     Int       @id @default(autoincrement())
+  stripe_id    String    @unique
+  total_amount String?
+  event_id     String
+  event        events    @relation(fields: [event_id], references: [event_id])
+  buyer_id     String
+  buyer        users     @relation(fields: [buyer_id], references: [user_id])
+  created_at   DateTime? @default(now())
+}

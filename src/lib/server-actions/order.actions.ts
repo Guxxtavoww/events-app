@@ -1,6 +1,4 @@
 'use server';
-
-import { ObjectId } from 'mongodb';
 import { redirect } from 'next/navigation';
 
 import {
@@ -9,9 +7,6 @@ import {
   GetOrdersByEventParams,
   GetOrdersByUserParams,
 } from './types';
-import Order, { IOrder } from '../database/models/order.model';
-import Event from '../database/models/event.model';
-import User from '../database/models/user.model';
 import { performDatabaseOperation } from '../database/database.lib';
 
 export async function getOrderByEvent({
@@ -20,53 +15,22 @@ export async function getOrderByEvent({
 }: GetOrdersByEventParams) {
   if (!event_id) throw new Error('Event ID is required');
 
-  return performDatabaseOperation(async () => {
-    const eventObjectId = new ObjectId(event_id);
-
-    const orders = await Order.aggregate([
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'buyer',
-          foreignField: '_id',
-          as: 'buyer',
-        },
-      },
-      {
-        $unwind: '$buyer',
-      },
-      {
-        $lookup: {
-          from: 'events',
-          localField: 'event',
-          foreignField: '_id',
-          as: 'event',
-        },
-      },
-      {
-        $unwind: '$event',
-      },
-      {
-        $project: {
-          _id: 1,
-          total_amount: 1,
-          created_at: 1,
-          event_title: '$event.title',
-          event_id: '$event._id',
-          buyer: {
-            $concat: ['$buyer.first_name', ' ', '$buyer.last_name'],
-          },
-        },
-      },
-      {
-        $match: {
-          $and: [
-            { eventId: eventObjectId },
-            { buyer: { $regex: RegExp(search_string, 'i') } },
+  return performDatabaseOperation(async (primsa) => {
+    const orders = await primsa.orders.findMany({
+      where: {
+        event_id,
+        buyer: {
+          OR: [
+            {
+              first_name: search_string,
+            },
+            {
+              last_name: search_string,
+            },
           ],
         },
       },
-    ]);
+    });
 
     return orders;
   });
@@ -77,31 +41,64 @@ export async function getOrdersByUser({
   limit = 3,
   page,
 }: GetOrdersByUserParams) {
-  return performDatabaseOperation(async () => {
+  return performDatabaseOperation(async (prisma) => {
     const skipAmount = (Number(page) - 1) * limit;
 
     const [orders, ordersCount] = await Promise.all([
-      Order.distinct('event._id')
-        .find()
-        .sort({ created_at: 'desc' })
-        .skip(skipAmount)
-        .limit(limit)
-        .populate({
-          path: 'event',
-          model: Event,
-          populate: {
-            path: 'organizer',
-            model: User,
-            select: '_id first_name last_name',
+      prisma.orders.findMany({
+        where: {
+          buyer: {
+            user_id,
           },
-        }),
-      Order.distinct('event._id').countDocuments(),
+        },
+        take: limit,
+        skip: skipAmount,
+        orderBy: {
+          created_at: 'desc',
+        },
+        select: {
+          order_id: true,
+          event: {
+            select: {
+              event_id: true,
+              organizer: {
+                select: {
+                  first_name: true,
+                  user_id: true,
+                  last_name: true,
+                },
+              },
+              category: {
+                select: {
+                  category_id: true,
+                  category_name: true,
+                },
+              },
+              created_at: true,
+              description: true,
+              image_url: true,
+              end_date_time: true,
+              is_free: true,
+              location: true,
+              title: true,
+              price: true,
+              start_date_time: true,
+              url: true,
+            },
+          },
+        },
+      }),
+      prisma.orders.count({
+        where: {
+          buyer: {
+            user_id,
+          },
+        },
+      }),
     ]);
 
     return {
-      data: JSON.parse(
-        JSON.stringify(orders.map((order) => order.event) || [])
-      ),
+      data: orders?.map((order) => order.event),
       totalPages: Math.ceil(ordersCount / limit),
     };
   });

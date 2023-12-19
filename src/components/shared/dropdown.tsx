@@ -51,11 +51,11 @@ function Dropdown({ value, onChangeHandler }: DropdownProps) {
       <SelectContent>
         {categories?.map((category) => (
           <SelectItem
-            key={category._id}
-            value={category._id}
+            key={category.category_id}
+            value={category.category_id?.toString()}
             className="select-item p-regular-14"
           >
-            {category.name}
+            {category.category_name}
           </SelectItem>
         ))}
         <AlertDialog>

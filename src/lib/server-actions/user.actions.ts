@@ -2,21 +2,40 @@
 
 import { revalidatePath } from 'next/cache';
 
-import Event from '../database/models/event.model';
-import User from '../database/models/user.model';
-import Order from '../database/models/order.model';
 import { UpdateUserParams, iCreateUserPayload } from './types';
 import { performDatabaseOperation } from '../database/database.lib';
 
-export async function createUser(payload: iCreateUserPayload) {
-  return performDatabaseOperation(async () => {
-    return await User.create(payload);
+export async function createUser({
+  clerk_id,
+  email,
+  first_name,
+  last_name,
+  photo_url,
+  username,
+}: iCreateUserPayload) {
+  return performDatabaseOperation(async (prisma) => {
+    const createdUser = await prisma.users.create({
+      data: {
+        user_id: clerk_id,
+        email,
+        first_name,
+        last_name,
+        photo_url,
+        username,
+      },
+    });
+
+    return createdUser;
   });
 }
 
-export async function getUserById(userId: string) {
-  return performDatabaseOperation(async () => {
-    const user = await User.findById(userId);
+export async function getUserById(user_id: string) {
+  return performDatabaseOperation(async (prisma) => {
+    const user = await prisma.users.findUnique({
+      where: {
+        user_id,
+      },
+    });
 
     if (!user) throw new Error('User not found');
 
@@ -24,10 +43,21 @@ export async function getUserById(userId: string) {
   });
 }
 
-export async function updateUser(clerk_id: string, user: UpdateUserParams) {
-  return performDatabaseOperation(async () => {
-    const updatedUser = await User.findOneAndUpdate({ clerk_id }, user, {
-      new: true,
+export async function updateUser(
+  clerk_id: string,
+  { first_name, last_name, photo_url, username }: UpdateUserParams
+) {
+  return performDatabaseOperation(async (prisma) => {
+    const updatedUser = await prisma.users.update({
+      where: {
+        user_id: clerk_id,
+      },
+      data: {
+        first_name,
+        last_name,
+        photo_url,
+        username,
+      },
     });
 
     if (!updatedUser) throw new Error('User update failed');
@@ -37,27 +67,35 @@ export async function updateUser(clerk_id: string, user: UpdateUserParams) {
 }
 
 export async function deleteUser(clerk_id: string) {
-  return performDatabaseOperation(async () => {
-    const userToDelete = await User.findOne({ clerk_id });
+  return performDatabaseOperation(async (primsa) => {
+    const userToDelete = await primsa.users.findUnique({
+      where: {
+        user_id: clerk_id,
+      },
+      select: {
+        user_id: true,
+      },
+    });
 
     if (!userToDelete) {
       throw new Error('User not found');
     }
 
     await Promise.all([
-      Event.updateMany(
-        { _id: { $in: userToDelete.events } },
-        { $pull: { organizer: userToDelete._id } }
-      ),
-      Order.updateMany(
-        { _id: { $in: userToDelete.orders } },
-        { $unset: { buyer: 1 } }
-      ),
+      primsa.events.deleteMany({
+        where: { organizer_id: userToDelete.user_id },
+      }),
+      primsa.orders.deleteMany({ where: { buyer_id: userToDelete.user_id } }),
     ]);
 
-    const deletedUser = await User.findByIdAndDelete(userToDelete._id);
+    const deletedUser = await primsa.users.delete({
+      where: {
+        user_id: userToDelete.user_id,
+      },
+    });
+
     revalidatePath('/');
 
-    return deletedUser || null;
+    return deletedUser;
   });
 }

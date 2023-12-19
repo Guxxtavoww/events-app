@@ -72,11 +72,9 @@ export function CreateEventForm() {
 
         if (newEvent) {
           form.reset();
-          router.push(`/events/${newEvent._id}`);
+          router.push(`/events/${newEvent.event_id}`);
           setFiles([]);
         }
-
-        return;
       } catch (error: any) {
         toast({
           title: 'Erro!',
@@ -128,7 +126,7 @@ export function CreateEventForm() {
                 <FormControl>
                   <Dropdown
                     onChangeHandler={field.onChange}
-                    value={field.value}
+                    value={field.value?.toString()}
                   />
                 </FormControl>
                 <FormMessage />

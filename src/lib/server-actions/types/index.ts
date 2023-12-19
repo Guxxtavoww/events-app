@@ -3,7 +3,7 @@ import { EventFormType } from '@/app/(root)/events/create/components/create-even
 export interface iCreateUserPayload {
   clerk_id: string;
   email: string;
-  username: string | null;
+  username: string;
   first_name: string;
   last_name: string;
   photo_url: string;
@@ -38,7 +38,7 @@ export type GetOrdersByEventParams = {
 };
 
 export type GetOrdersByUserParams = {
-  user_id: string | null;
+  user_id: string;
   limit?: number;
   page: string | number | null;
 };
@@ -51,19 +51,19 @@ export type CreateEventParams = {
 
 export type UpdateEventParams = {
   user_id: string;
-  event: Partial<EventFormType> & { _id: string };
+  event: Partial<EventFormType> & { event_id: string };
   path: string;
 };
 
 export type GetRelatedEventsByCategoryParams = {
-  category_id: string;
+  category_id: number;
   event_id: string;
   limit?: number;
   page: number | string;
 };
 
 export type GetEventsByUserParams = {
-  userId: string;
+  user_id: string;
   limit?: number;
   page: number;
 };

@@ -49,13 +49,13 @@ export default function UpdateEventForm({ event }: iUpdateEventFormProps) {
   const form = useForm<EventFormType>({
     resolver: zodResolver(updateEventFormSchema),
     defaultValues: {
-      category_id: event.category._id,
+      category_id: event.category.category_id,
       description: event.description,
       end_date_time: new Date(event.end_date_time),
       image_url: event.image_url,
       is_free: event.is_free,
       location: event.location,
-      price: event.price,
+      price: event.price || undefined,
       start_date_time: new Date(event.start_date_time),
       title: event.title,
       url: event.url,
@@ -79,14 +79,18 @@ export default function UpdateEventForm({ event }: iUpdateEventFormProps) {
         }
 
         const updatedEvent = await mutateAsync({
-          event: { ...data, image_url: uploadedImageUrl, _id: event._id },
+          event: {
+            ...data,
+            image_url: uploadedImageUrl,
+            event_id: event.event_id,
+          },
           user_id: userId!,
           path: pathname,
         });
 
         if (updatedEvent) {
           form.reset();
-          router.push(`/events/${updatedEvent._id}`);
+          router.push(`/events/${updatedEvent.event_id}`);
           setFiles([]);
         }
       } catch (error: any) {
@@ -137,7 +141,7 @@ export default function UpdateEventForm({ event }: iUpdateEventFormProps) {
                 <FormControl>
                   <Dropdown
                     onChangeHandler={field.onChange}
-                    value={field.value}
+                    value={field.value.toString()}
                   />
                 </FormControl>
                 <FormMessage />

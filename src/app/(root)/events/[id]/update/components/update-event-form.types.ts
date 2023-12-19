@@ -1,10 +1,9 @@
 import { z } from 'zod';
-import { Document } from 'mongoose';
 
-import { IEvent } from '@/lib/database/models/event.model';
+import { getEventById } from '@/lib/server-actions/event.actions';
 
 export interface iUpdateEventFormProps {
-  event: IEvent;
+  event: Required<NonNullable<Awaited<ReturnType<typeof getEventById>>>>;
 }
 
 export const updateEventFormSchema = z
@@ -21,7 +20,9 @@ export const updateEventFormSchema = z
     image_url: z.string({ required_error: 'Foto é obrigatória' }),
     start_date_time: z.date({ required_error: 'Obrigatório' }),
     end_date_time: z.date({ required_error: 'Obrigatório' }),
-    category_id: z.string({ required_error: 'Categoria é obrigatória' }),
+    category_id: z
+      .string({ required_error: 'Categoria é obrigatória' })
+      .transform((value) => +value),
     price: z.string().optional(),
     is_free: z.boolean().optional().default(false),
     url: z.string({ required_error: 'Obrigatório' }).url('Url inválida'),

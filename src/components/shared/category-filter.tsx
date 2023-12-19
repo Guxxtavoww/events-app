@@ -53,13 +53,13 @@ export default function CategoryFilter() {
         <SelectItem value="All" className="select-item p-regular-14">
           Todas
         </SelectItem>
-        {categories?.map((category) => (
+        {categories?.map((category, index) => (
           <SelectItem
-            value={category.name}
-            key={category._id}
+            value={category.category_id.toString()}
+            key={index}
             className="select-item p-regular-14"
           >
-            {category.name}
+            {category.category_name}
           </SelectItem>
         ))}
       </SelectContent>
