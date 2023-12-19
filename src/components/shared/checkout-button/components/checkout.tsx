@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
+import { useRouter } from 'next/navigation';
 
 import { iCheckoutButtonProps } from '..';
 
@@ -13,7 +14,6 @@ import {
   CreateOrderParams,
 } from '@/lib/server-actions/types';
 import { checkoutOrder, createOrder } from '@/lib/server-actions/order.actions';
-import { useRouter } from 'next/navigation';
 
 interface iCheckoutProps {
   event: iCheckoutButtonProps['event'];
