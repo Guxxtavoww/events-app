@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "orders" ADD COLUMN "created_at" DATETIME DEFAULT CURRENT_TIMESTAMP;
