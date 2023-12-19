@@ -2,7 +2,6 @@
 
 import { revalidatePath } from 'next/cache';
 
-
 import { performDatabaseOperation } from '../database/database.lib';
 import {
   CreateEventParams,
@@ -10,6 +9,7 @@ import {
   GetRelatedEventsByCategoryParams,
   UpdateEventParams,
 } from './types';
+import { getCategoryByName } from './category.actions';
 
 export async function getAllEvents(
   query: string,
@@ -17,121 +17,247 @@ export async function getAllEvents(
   page = 1,
   limit = 6
 ) {
-  return performDatabaseOperation(async () => {
-    const titleCondition = query
-      ? { title: { $regex: query, $options: 'i' } }
-      : {};
-
+  return performDatabaseOperation(async (prisma) => {
     const categoryCondition = category
       ? await getCategoryByName(category)
       : null;
 
-    const conditions = {
-      $and: [
-        titleCondition,
-        categoryCondition ? { category: categoryCondition._id } : {},
+    const skipAmount = (Number(page) - 1) * limit;
+
+    const where = {
+      OR: [
+        {
+          category: {
+            category_id: categoryCondition?.category_id,
+          },
+        },
+        {
+          title: query,
+        },
+        {
+          description: query,
+        },
       ],
     };
 
-    const skipAmount = (Number(page) - 1) * limit;
-
-    const eventsQuery = Event.find(conditions)
-      .sort({ created_at: 'desc' })
-      .skip(skipAmount)
-      .limit(limit);
-
     const [events, eventsCount] = await Promise.all([
-      populateEvent(eventsQuery),
-      Event.countDocuments(conditions),
+      prisma.events.findMany({
+        where,
+        orderBy: {
+          created_at: 'desc',
+        },
+        skip: skipAmount,
+        take: limit,
+        select: {
+          event_id: true,
+          organizer: {
+            select: {
+              first_name: true,
+              user_id: true,
+              last_name: true,
+            },
+          },
+          category: {
+            select: {
+              category_id: true,
+              category_name: true,
+            },
+          },
+          created_at: true,
+          description: true,
+          image_url: true,
+          end_date_time: true,
+          is_free: true,
+          location: true,
+          title: true,
+          price: true,
+          start_date_time: true,
+          url: true,
+        },
+      }),
+      prisma.events.count({ where }),
     ]);
 
     return {
-      data: JSON.parse(JSON.stringify(events)) as IEvent[],
+      data: events,
       totalPages: Math.ceil(eventsCount / limit),
     };
   });
 }
 
 export async function createEvent({ event, path, user_id }: CreateEventParams) {
-  return performDatabaseOperation(async () => {
-    const organizer = await User.findOne({ clerk_id: user_id });
+  return performDatabaseOperation(async (prisma) => {
+    const organizer = await prisma.users.findUnique({
+      where: {
+        user_id,
+      },
+    });
 
     if (!organizer) throw new Error('Organizer not found');
 
-    const eventPayload = {
-      ...event,
-      category: event.category_id,
-      organizer: organizer._id,
-    };
-
-    const newEvent = await Event.create(eventPayload);
+    const newEvent = await prisma.events.create({
+      data: {
+        organizer_id: organizer.user_id,
+        category_id: event.category_id,
+        description: event.description,
+        end_date_time: new Date(event.end_date_time),
+        image_url: event.image_url,
+        is_free: event.is_free,
+        location: event.location,
+        price: event.price,
+        start_date_time: new Date(event.start_date_time),
+        title: event.title,
+        url: event.url,
+      },
+    });
 
     revalidatePath(path);
 
-    return newEvent as IEvent;
+    return newEvent;
   });
 }
 
 export async function updateEvent({ event, path, user_id }: UpdateEventParams) {
-  return performDatabaseOperation(async () => {
-    const eventToUpdate = (await Event.findById(event._id)) as
-      | IEvent
-      | undefined;
+  return performDatabaseOperation(async (prisma) => {
+    const eventToUpdate = await prisma.events.findUnique({
+      where: {
+        event_id: event.event_id,
+      },
+      select: {
+        event_id: true,
+        category_id: true,
+        organizer: {
+          select: {
+            user_id: true,
+          },
+        },
+      },
+    });
 
     if (!eventToUpdate) {
       throw new Error('Unauthorized or event not found');
     }
 
-    const eventOrganizer = await User.findById(eventToUpdate.organizer._id);
+    const eventOrganizer = eventToUpdate.organizer;
 
-    if (!eventOrganizer || eventOrganizer.clerk_id !== user_id) {
+    if (!eventOrganizer || eventOrganizer.user_id !== user_id) {
       throw new Error('Invalid organizer');
     }
 
-    const updatedEvent = await Event.findByIdAndUpdate(
-      event._id,
-      { ...event, category: event.category_id },
-      { new: true }
-    );
+    const updatedEvent = await prisma.events.update({
+      where: {
+        event_id: eventToUpdate.event_id,
+      },
+      data: {
+        category_id: event.category_id,
+        description: event.description,
+        end_date_time: event.end_date_time,
+        image_url: event.image_url,
+        is_free: event.is_free,
+        location: event.location,
+        price: event.price,
+        title: event.title,
+        url: event.url,
+        start_date_time: event.start_date_time,
+      },
+    });
 
     revalidatePath(path);
 
-    return updatedEvent as IEvent;
+    return updatedEvent;
   });
 }
 
-export async function getEventById(eventId: string) {
-  return performDatabaseOperation(async () => {
-    const event = (await populateEvent(Event.findById(eventId))) as
-      | IEvent
-      | undefined;
+export async function getEventById(event_id: string) {
+  return performDatabaseOperation(async (prisma) => {
+    const foundedEvent = await prisma.events.findUnique({
+      where: {
+        event_id,
+      },
+      select: {
+        event_id: true,
+        organizer: {
+          select: {
+            first_name: true,
+            user_id: true,
+            last_name: true,
+          },
+        },
+        category: {
+          select: {
+            category_id: true,
+            category_name: true,
+          },
+        },
+        created_at: true,
+        description: true,
+        image_url: true,
+        end_date_time: true,
+        is_free: true,
+        location: true,
+        title: true,
+        price: true,
+        start_date_time: true,
+        url: true,
+      },
+    });
 
-    if (!event) return undefined;
-
-    return JSON.parse(JSON.stringify(event)) as IEvent;
+    return foundedEvent;
   });
 }
 
 export async function getEventsByUser({
   page,
-  userId,
+  user_id,
   limit = 6,
 }: GetEventsByUserParams) {
-  return performDatabaseOperation(async () => {
+  return performDatabaseOperation(async (prisma) => {
     const skipAmount = (page - 1) * limit;
 
-    const eventsQuery = Event.find()
-      .sort({ created_at: 'desc' })
-      .skip(skipAmount)
-      .limit(limit);
+    const where = {
+      organizer_id: user_id,
+    };
 
     const [events, eventsCount] = await Promise.all([
-      populateEvent(eventsQuery),
-      Event.countDocuments(),
+      prisma.events.findMany({
+        where,
+        orderBy: {
+          created_at: 'desc',
+        },
+        skip: skipAmount,
+        take: limit,
+        select: {
+          event_id: true,
+          organizer: {
+            select: {
+              first_name: true,
+              user_id: true,
+              last_name: true,
+            },
+          },
+          category: {
+            select: {
+              category_id: true,
+              category_name: true,
+            },
+          },
+          created_at: true,
+          description: true,
+          image_url: true,
+          end_date_time: true,
+          is_free: true,
+          location: true,
+          title: true,
+          price: true,
+          start_date_time: true,
+          url: true,
+        },
+      }),
+      prisma.events.count({ where }),
     ]);
 
     return {
-      data: JSON.parse(JSON.stringify(events)) as IEvent[],
+      data: events,
       totalPages: Math.ceil(eventsCount / limit),
     };
   });
@@ -143,20 +269,53 @@ export async function getRelatedEventsByCategory({
   page = 1,
   limit = 3,
 }: GetRelatedEventsByCategoryParams) {
-  return performDatabaseOperation(async () => {
+  return performDatabaseOperation(async (primsa) => {
     const skipAmount = (Number(page) - 1) * limit;
 
-    const conditions = {
-      $and: [{ category: category_id }, { _id: { $ne: event_id } }],
+    const where = {
+      category_id,
+      event_id: {
+        contains: event_id,
+      },
     };
 
-    const eventsQuery = Event.find(conditions)
-      .sort({ created_at: 'desc' })
-      .skip(skipAmount)
-      .limit(limit);
-
-    const events = await populateEvent(eventsQuery);
-    const eventsCount = await Event.countDocuments(conditions);
+    const [events, eventsCount] = await Promise.all([
+      primsa.events.findMany({
+        where,
+        orderBy: {
+          created_at: 'desc',
+        },
+        skip: skipAmount,
+        take: limit,
+        select: {
+          event_id: true,
+          organizer: {
+            select: {
+              first_name: true,
+              user_id: true,
+              last_name: true,
+            },
+          },
+          category: {
+            select: {
+              category_id: true,
+              category_name: true,
+            },
+          },
+          created_at: true,
+          description: true,
+          image_url: true,
+          end_date_time: true,
+          is_free: true,
+          location: true,
+          title: true,
+          price: true,
+          start_date_time: true,
+          url: true,
+        },
+      }),
+      primsa.events.count({ where }),
+    ]);
 
     return {
       data: events,
@@ -165,12 +324,22 @@ export async function getRelatedEventsByCategory({
   });
 }
 
-export async function deleteEvent(eventId: string, path?: string) {
-  return performDatabaseOperation(async () => {
-    const deletedEvent = await Event.findByIdAndDelete(eventId);
+export async function deleteEvent(event_id: string, path?: string) {
+  return performDatabaseOperation(async (prisma) => {
+    await Promise.all([
+      prisma.events.delete({
+        where: {
+          event_id,
+          is_free: true,
+        },
+      }),
+      prisma.orders.deleteMany({
+        where: {
+          event_id,
+        },
+      }),
+    ]);
 
-    if (deletedEvent) revalidatePath(path || '/');
-
-    return deletedEvent;
+    revalidatePath(path || '/');
   });
 }

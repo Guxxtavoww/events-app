@@ -37,7 +37,7 @@ export async function getOrderByEvent({
 }
 
 export async function getOrdersByUser({
-  clerk_id,
+  user_id,
   limit = 3,
   page,
 }: GetOrdersByUserParams) {
@@ -48,7 +48,7 @@ export async function getOrdersByUser({
       prisma.orders.findMany({
         where: {
           buyer: {
-            clerk_id,
+            user_id,
           },
         },
         take: limit,
@@ -60,6 +60,7 @@ export async function getOrdersByUser({
           order_id: true,
           event: {
             select: {
+              event_id: true,
               organizer: {
                 select: {
                   first_name: true,
@@ -67,6 +68,22 @@ export async function getOrdersByUser({
                   last_name: true,
                 },
               },
+              category: {
+                select: {
+                  category_id: true,
+                  category_name: true,
+                },
+              },
+              created_at: true,
+              description: true,
+              image_url: true,
+              end_date_time: true,
+              is_free: true,
+              location: true,
+              title: true,
+              price: true,
+              start_date_time: true,
+              url: true,
             },
           },
         },
@@ -74,7 +91,7 @@ export async function getOrdersByUser({
       prisma.orders.count({
         where: {
           buyer: {
-            clerk_id,
+            user_id,
           },
         },
       }),

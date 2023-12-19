@@ -15,8 +15,8 @@ export default async function Page({ searchParams }: SearchParamProps) {
   const eventsPage = Number(searchParams?.eventsPage) || 1;
 
   const [orderedEvents, organizedEvents] = await Promise.all([
-    getOrdersByUser({ clerk_id: userId, page: ordersPage }),
-    getEventsByUser({ userId, page: eventsPage }),
+    getOrdersByUser({ user_id: userId, page: ordersPage }),
+    getEventsByUser({ user_id: userId, page: eventsPage }),
   ]);
 
   return (

@@ -2,13 +2,32 @@
 
 import React from 'react';
 
-import { IEvent } from '@/lib/database/models/event.model';
-
 import Card from './card';
 import Pagination from './pagination';
 
 type CollectionProps = {
-  data: IEvent[];
+  data: {
+    event_id: string;
+    title: string;
+    description: string;
+    location: string;
+    created_at: Date | null;
+    image_url: string;
+    start_date_time: Date;
+    end_date_time: Date;
+    price: string | null;
+    is_free: boolean;
+    url: string;
+    category: {
+      category_id: number;
+      category_name: string;
+    };
+    organizer: {
+      user_id: string;
+      last_name: string;
+      first_name: string;
+    };
+  }[];
   emptyTitle: string;
   emptyStateSubtext: string;
   limit: number;
@@ -32,12 +51,12 @@ export default function Collection({
       {data.length > 0 ? (
         <div className="flex flex-col items-center gap-10">
           <ul className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:gap-10">
-            {data.map((event) => {
+            {data.map((event, key) => {
               const hasOrderLink = collectionType === 'Events_Organized';
               const hidePrice = collectionType === 'My_Tickets';
 
               return (
-                <li key={event._id} className="flex justify-center">
+                <li key={key} className="flex justify-center">
                   <Card
                     event={event}
                     hasOrderLink={hasOrderLink}

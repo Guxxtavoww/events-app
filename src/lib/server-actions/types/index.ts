@@ -33,12 +33,12 @@ export type CreateOrderParams = {
 };
 
 export type GetOrdersByEventParams = {
-  event_id: number;
+  event_id: string;
   search_string: string;
 };
 
 export type GetOrdersByUserParams = {
-  clerk_id: string;
+  user_id: string;
   limit?: number;
   page: string | number | null;
 };
@@ -51,19 +51,19 @@ export type CreateEventParams = {
 
 export type UpdateEventParams = {
   user_id: string;
-  event: Partial<EventFormType> & { _id: string };
+  event: Partial<EventFormType> & { event_id: string };
   path: string;
 };
 
 export type GetRelatedEventsByCategoryParams = {
-  category_id: string;
+  category_id: number;
   event_id: string;
   limit?: number;
   page: number | string;
 };
 
 export type GetEventsByUserParams = {
-  userId: string;
+  user_id: string;
   limit?: number;
   page: number;
 };

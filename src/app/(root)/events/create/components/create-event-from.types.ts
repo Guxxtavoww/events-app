@@ -14,7 +14,9 @@ export const createEventFormSchema = z
     image_url: z.string({ required_error: 'Foto é obrigatória' }),
     start_date_time: z.date({ required_error: 'Obrigatório' }),
     end_date_time: z.date({ required_error: 'Obrigatório' }),
-    category_id: z.string({ required_error: 'Categoria é obrigatória' }),
+    category_id: z
+      .number({ required_error: 'Categoria é obrigatória' })
+      .transform((value) => +value),
     price: z.string().optional(),
     is_free: z.boolean().optional().default(false),
     url: z.string({ required_error: 'Obrigatório' }).url('Url inválida'),

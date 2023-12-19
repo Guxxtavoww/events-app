@@ -16,7 +16,7 @@ export async function createUser({
   return performDatabaseOperation(async (prisma) => {
     const createdUser = await prisma.users.create({
       data: {
-        clerk_id,
+        user_id: clerk_id,
         email,
         first_name,
         last_name,
@@ -29,7 +29,7 @@ export async function createUser({
   });
 }
 
-export async function getUserById(user_id: number) {
+export async function getUserById(user_id: string) {
   return performDatabaseOperation(async (prisma) => {
     const user = await prisma.users.findUnique({
       where: {
@@ -49,9 +49,8 @@ export async function updateUser(
 ) {
   return performDatabaseOperation(async (prisma) => {
     const updatedUser = await prisma.users.update({
-      // @ts-ignore
       where: {
-        clerk_id,
+        user_id: clerk_id,
       },
       data: {
         first_name,
@@ -70,13 +69,11 @@ export async function updateUser(
 export async function deleteUser(clerk_id: string) {
   return performDatabaseOperation(async (primsa) => {
     const userToDelete = await primsa.users.findUnique({
-      // @ts-ignore
       where: {
-        clerk_id,
+        user_id: clerk_id,
       },
       select: {
         user_id: true,
-        clerk_id: true,
       },
     });
 
@@ -94,7 +91,6 @@ export async function deleteUser(clerk_id: string) {
     const deletedUser = await primsa.users.delete({
       where: {
         user_id: userToDelete.user_id,
-        clerk_id: userToDelete.clerk_id,
       },
     });
 

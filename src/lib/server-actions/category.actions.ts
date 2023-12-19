@@ -1,24 +1,41 @@
 'use server';
 
 import { performDatabaseOperation } from '../database/database.lib';
-import Category, { ICategory } from '../database/models/category.model';
 
 export async function getAllCategories() {
-  return performDatabaseOperation(async () => {
-    const categories = await Category.find();
+  return performDatabaseOperation(async (prisma) => {
+    const categories = await prisma.categories.findMany();
 
-    return JSON.parse(JSON.stringify(categories)) as ICategory[];
+    return categories;
+  });
+}
+
+export async function getCategoryByName(category_name: string) {
+  return performDatabaseOperation(async (prisma) => {
+    try {
+      return prisma.categories.findFirst({
+        where: {
+          category_name,
+        },
+      });
+    } catch (error) {
+      return undefined;
+    }
   });
 }
 
 export async function createCategory(categoryName: string) {
-  return performDatabaseOperation(async () => {
-    const existingCategory = await Category.findOne({ name: categoryName });
+  return performDatabaseOperation(async (prisma) => {
+    const existingCategory = await getCategoryByName(categoryName);
 
     if (existingCategory) return undefined;
 
-    const newCategory = await Category.create({ name: categoryName });
+    const newCategory = await prisma.categories.create({
+      data: {
+        category_name: categoryName,
+      },
+    });
 
-    return JSON.parse(JSON.stringify(newCategory)) as ICategory;
+    return newCategory;
   });
 }

@@ -9,8 +9,7 @@ datasource db {
 }
 
 model users {
-  user_id          Int      @id @default(autoincrement())
-  clerk_id         String
+  user_id          String   @id
   email            String
   username         String
   first_name       String
@@ -21,7 +20,7 @@ model users {
 }
 
 model events {
-  event_id        Int        @id @default(autoincrement())
+  event_id        String     @id @default(uuid())
   title           String
   description     String
   location        String
@@ -29,13 +28,13 @@ model events {
   image_url       String
   start_date_time DateTime
   end_date_time   DateTime
-  price           String
+  price           String?
   is_free         Boolean
   url             String
   category        categories @relation(fields: [category_id], references: [category_id])
   category_id     Int
   organizer       users      @relation(fields: [organizer_id], references: [user_id])
-  organizer_id    Int
+  organizer_id    String
   orders          orders[]
 }
 
@@ -49,9 +48,9 @@ model orders {
   order_id     Int       @id @default(autoincrement())
   stripe_id    String    @unique
   total_amount String?
-  event_id     Int
+  event_id     String
   event        events    @relation(fields: [event_id], references: [event_id])
-  buyer_id     Int
+  buyer_id     String
   buyer        users     @relation(fields: [buyer_id], references: [user_id])
   created_at   DateTime? @default(now())
 }
