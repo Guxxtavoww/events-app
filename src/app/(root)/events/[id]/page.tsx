@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { auth } from '@clerk/nextjs';
 
 import {
   getEventById,
@@ -15,7 +16,8 @@ export default async function EventDetails({
   params: { id },
   searchParams,
 }: SearchParamProps) {
-  const event = await getEventById(id);
+  const { userId } = auth();
+  const event = await getEventById(id, userId!);
 
   if (!event) {
     return (

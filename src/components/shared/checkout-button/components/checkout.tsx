@@ -18,11 +18,16 @@ import { checkoutOrder, createOrder } from '@/lib/server-actions/order.actions';
 interface iCheckoutProps {
   event: iCheckoutButtonProps['event'];
   user_id: string;
+  hasCurrentUserBoughtTicket: boolean;
 }
 
 loadStripe(process.env.STRIPE_PUBLIC_KEY);
 
-export default function Checkout({ event, user_id }: iCheckoutProps) {
+export default function Checkout({
+  event,
+  user_id,
+  hasCurrentUserBoughtTicket,
+}: iCheckoutProps) {
   const { replace } = useRouter();
 
   const { mutateAsync, isPending } = useMutation({
@@ -83,7 +88,12 @@ export default function Checkout({ event, user_id }: iCheckoutProps) {
         role="link"
         size="lg"
         className="button sm:w-fit"
-        disabled={isPending || isLoading}
+        disabled={isPending || isLoading || hasCurrentUserBoughtTicket}
+        title={
+          hasCurrentUserBoughtTicket
+            ? 'Você já tem um bilhete pra esse evento'
+            : undefined
+        }
       >
         {event.is_free ? 'Adquirir Bilhete' : 'Comprar Bilhete'}
       </Button>

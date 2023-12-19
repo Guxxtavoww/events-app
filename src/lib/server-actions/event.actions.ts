@@ -172,7 +172,7 @@ export async function updateEvent({ event, path, user_id }: UpdateEventParams) {
   });
 }
 
-export async function getEventById(event_id: string) {
+export async function getEventById(event_id: string, user_id?: string) {
   return performDatabaseOperation(async (prisma) => {
     const foundedEvent = await prisma.events.findUnique({
       where: {
@@ -203,6 +203,14 @@ export async function getEventById(event_id: string) {
         price: true,
         start_date_time: true,
         url: true,
+        orders: {
+          select: {
+            buyer_id: true,
+          },
+          where: {
+            buyer_id: user_id,
+          },
+        },
       },
     });
 
