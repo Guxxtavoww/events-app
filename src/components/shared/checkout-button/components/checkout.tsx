@@ -19,6 +19,7 @@ interface iCheckoutProps {
   event: iCheckoutButtonProps['event'];
   user_id: string;
   hasCurrentUserBoughtTicket: boolean;
+  currentUserOwnsEvent: boolean;
 }
 
 loadStripe(process.env.STRIPE_PUBLIC_KEY);
@@ -27,6 +28,7 @@ export default function Checkout({
   event,
   user_id,
   hasCurrentUserBoughtTicket,
+  currentUserOwnsEvent,
 }: iCheckoutProps) {
   const { replace } = useRouter();
 
@@ -88,7 +90,12 @@ export default function Checkout({
         role="link"
         size="lg"
         className="button sm:w-fit"
-        disabled={isPending || isLoading || hasCurrentUserBoughtTicket}
+        disabled={
+          isPending ||
+          isLoading ||
+          hasCurrentUserBoughtTicket ||
+          currentUserOwnsEvent
+        }
         title={
           hasCurrentUserBoughtTicket
             ? 'Você já tem um bilhete pra esse evento'

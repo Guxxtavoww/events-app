@@ -25,6 +25,8 @@ export default function CheckoutButton({ event }: iCheckoutButtonProps) {
     (order) => order.buyer_id === userId
   );
 
+  const currentUserOwnsEvent = event.organizer.user_id === userId;
+
   return (
     <div className="flex items-center gap-3">
       {hasEventFinished ? (
@@ -40,6 +42,7 @@ export default function CheckoutButton({ event }: iCheckoutButtonProps) {
             <Checkout
               event={event}
               user_id={userId!}
+              currentUserOwnsEvent={currentUserOwnsEvent}
               hasCurrentUserBoughtTicket={hasCurrentUserBoughtTicket}
             />
           </SignedIn>
